@@ -36,7 +36,7 @@ export function CurrentOzonePanel() {
         AQI: {currentData.aqi} - {currentData.category}
       </div>
       
-      <div className="mt-4 text-xs text-gray-400">
+      <div suppressHydrationWarning={true} className="mt-4 text-xs text-gray-400">
         Last updated: {new Date(currentData.lastUpdated).toLocaleTimeString()}
       </div>
     </div>

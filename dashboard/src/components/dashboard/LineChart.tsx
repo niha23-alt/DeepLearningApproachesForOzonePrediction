@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import { LineChart as RechartsLineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 
 interface ChartDataPoint {
@@ -9,29 +10,60 @@ interface ChartDataPoint {
 }
 
 export function LineChart() {
-  const data: ChartDataPoint[] = [
-    { date: '2025-11-01', actualValue: 95.2, predictedValue: 98.5 },
-    { date: '2025-11-05', actualValue: 102.3, predictedValue: 105.1 },
-    { date: '2025-11-09', actualValue: 108.7, predictedValue: 110.2 },
-    { date: '2025-11-13', actualValue: 115.4, predictedValue: 117.8 },
-    { date: '2025-11-17', actualValue: 122.1, predictedValue: 125.3 },
-    { date: '2025-11-21', actualValue: 118.9, predictedValue: 121.5 },
-    { date: '2025-11-25', actualValue: 125.3, predictedValue: 127.5 },
-    { date: '2025-11-30', actualValue: 127.5, predictedValue: 129.2 }
-  ]
+  const [data, setData] = useState<ChartDataPoint[]>([])
+  const [loading, setLoading] = useState<boolean>(true)
+  const [error, setError] = useState<string | null>(null)
+  const [limit, setLimit] = useState<number>(30)
+  const [start, setStart] = useState<string>('')
+  const [end, setEnd] = useState<string>('')
+  const [isClient, setIsClient] = useState<boolean>(false)
 
-  const CustomTooltip = ({ active, payload, label }: any) => {
+  useEffect(() => {
+    setIsClient(true)
+    const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
+    const controller = new AbortController()
+
+    async function load() {
+      try {
+        setLoading(true)
+        const params = new URLSearchParams()
+        params.set('limit', String(limit))
+        if (start) params.set('start', start)
+        if (end) params.set('end', end)
+        const res = await fetch(`${apiBase}/predict?${params.toString()}`, {
+          method: 'GET',
+          signal: controller.signal,
+          headers: { 'Accept': 'application/json' },
+        })
+        if (!res.ok) throw new Error(`HTTP ${res.status}`)
+        const json = await res.json()
+        setData(json)
+        setError(null)
+      } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : 'Failed to load data'
+        setError(msg)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    load()
+    return () => controller.abort()
+  }, [limit, start, end])
+
+  type TooltipEntry = { color: string; name: string; value: number }
+  const CustomTooltip = ({ active, payload, label }: { active?: boolean; payload?: TooltipEntry[]; label?: string | number }) => {
     if (active && payload && payload.length) {
       return (
         <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg">
-          <p className="text-sm font-semibold text-gray-900 mb-2">
-            {new Date(label).toLocaleDateString('en-US', { 
+          <p suppressHydrationWarning={true} className="text-sm font-semibold text-gray-900 mb-2">
+            {new Date((typeof label === 'undefined' ? '' : label) as string | number).toLocaleDateString('en-US', { 
               month: 'short', 
               day: 'numeric', 
               year: 'numeric' 
             })}
           </p>
-          {payload.map((entry: any, index: number) => (
+          {payload.map((entry: TooltipEntry, index: number) => (
             <div key={index} className="flex items-center justify-between space-x-4 text-sm">
               <div className="flex items-center space-x-2">
                 <div 
@@ -67,7 +99,33 @@ export function LineChart() {
         </div>
       </div>
 
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
+        <div className="flex items-center space-x-2">
+          <label className="text-sm text-gray-600">Start</label>
+          <input type="date" value={start} onChange={(e) => setStart(e.target.value)} className="border rounded-md px-2 py-1 text-sm w-full" />
+        </div>
+        <div className="flex items-center space-x-2">
+          <label className="text-sm text-gray-600">End</label>
+          <input type="date" value={end} onChange={(e) => setEnd(e.target.value)} className="border rounded-md px-2 py-1 text-sm w-full" />
+        </div>
+        <div className="flex items-center space-x-2">
+          <label className="text-sm text-gray-600">Limit</label>
+          <input type="number" min={1} max={500} value={limit} onChange={(e) => setLimit(Number(e.target.value))} className="border rounded-md px-2 py-1 text-sm w-full" />
+        </div>
+      </div>
+
       <div className="h-64 sm:h-80">
+        {loading && (
+          <div className="flex items-center justify-center h-full text-sm text-gray-500">
+            Loading ozone predictions...
+          </div>
+        )}
+        {!loading && error && (
+          <div className="flex items-center justify-center h-full text-sm text-red-600">
+            {error}
+          </div>
+        )}
+        {!loading && !error && isClient && (
         <ResponsiveContainer width="100%" height="100%">
           <RechartsLineChart 
             data={data} 
@@ -110,6 +168,7 @@ export function LineChart() {
             />
           </RechartsLineChart>
         </ResponsiveContainer>
+        )}
       </div>
 
       <div className="mt-4 text-sm text-gray-500 text-center">

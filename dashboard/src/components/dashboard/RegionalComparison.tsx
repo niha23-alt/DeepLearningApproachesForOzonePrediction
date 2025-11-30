@@ -1,6 +1,6 @@
 'use client'
 
-import { BarChart as RechartsBarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
+import { BarChart as RechartsBarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts'
 
 export function RegionalComparison() {
   const data = [
@@ -9,7 +9,7 @@ export function RegionalComparison() {
     { region: 'NW', averageOzone: 145.8, color: '#FF9800' }
   ]
 
-  const CustomTooltip = ({ active, payload }: any) => {
+  const CustomTooltip = ({ active, payload }: { active?: boolean; payload?: Array<{ payload: { region: string; averageOzone: number } }> }) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload
       return (
@@ -70,7 +70,7 @@ export function RegionalComparison() {
               radius={[4, 4, 0, 0]}
             >
               {data.map((entry, index) => (
-                <Bar key={`cell-${index}`} fill={entry.color} />
+                <Cell key={`cell-${index}`} fill={entry.color} />
               ))}
             </Bar>
           </RechartsBarChart>

@@ -46,7 +46,7 @@ export function AQIIndicator() {
       
       {/* AQI Categories */}
       <div className="flex justify-between mt-3 text-xs text-gray-600 font-medium">
-        {categories.slice(0, -1).map((category, index) => (
+        {categories.slice(0, -1).map((category) => (
           <span key={category.name} className="text-center flex-1">
             {category.name}
           </span>

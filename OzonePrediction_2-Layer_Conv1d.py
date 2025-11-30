@@ -29,12 +29,12 @@ tf.config.optimizer.set_jit(True)
 from keras import backend as K
 from keras.callbacks import ReduceLROnPlateau
 from keras.models import Model, load_model
-from keras.layers import Input, Dense, Conv1D, Reshape, Embedding, Flatten, Bidirectional, CuDNNGRU, GRU, CuDNNLSTM, LSTM, GlobalMaxPooling1D, BatchNormalization, MaxPooling1D
-from keras.layers.core import Dropout
+from keras.layers import Input, Dense, Conv1D, Reshape, Embedding, Flatten, Bidirectional, GRU, LSTM, GlobalMaxPooling1D, BatchNormalization, MaxPooling1D
+from keras.layers import Input, Dense, Conv1D, Reshape, Embedding, Flatten, Bidirectional, GRU, LSTM, GlobalMaxPooling1D, BatchNormalization, MaxPooling1D, Dropout, Activation
 from keras.callbacks import ModelCheckpoint, EarlyStopping
 from keras.callbacks import TensorBoard, CSVLogger
 
-sampleDataset = pd.read_csv(r'\PathToTheSampleDataset\2020-Northwest_China_Ozone_data.csv', index_col=0)
+sampleDataset = pd.read_csv(r'sample_dataset/2020-Northwest_China_Ozone_data.csv', index_col=0)
 
 pm_data = sampleDataset[['O3', 'year',  'doy', 'dem1', 'dem2', 'dem3', 'dem4', 'dem5',
        'dem6','dem7', 'dem8', 'dem9', 'dem91', 'lu1', 'lu2', 'lu3', 'lu4', 'lu5',
@@ -55,11 +55,8 @@ Obtain 4.45 million data samples. Remove negative numbers and perform normalizat
 pm_data = pm_data.drop(pm_data[(pm_data['O3']>300)].index, axis=0) # Delete the abnormal value contained in the label which is ('O3'>300)
 
 # Partition the data
-# We use the data from 2020 as the test set. 
-# The data from 2016-2019 as the training and validation sets.
-train_set = pm_data.drop(pm_data[(pm_data['year']>=2020)].index, axis=0)
-
-test_set = pm_data.drop(pm_data[(pm_data['year']<2020)].index, axis=0)
+# We will use an 80/20 split for training and testing from the 2020 data.
+train_set, test_set = train_test_split(pm_data, test_size=0.20, random_state=39)
 
 
 # Normalization
@@ -136,35 +133,26 @@ callbacks_list_new = [
                              '_{epoch:02d}_{val_mae:.3f}_{val_loss:.3f}' + '.h5',
                     monitor='val_loss',
                     verbose=1,
-                    save_best_only= True,
-                    period=1),
+                    save_best_only= True),
     EarlyStopping(monitor= 'val_loss',
                   patience=20,
                   verbose=1,
                   mode="auto"),
     TensorBoard(log_dir='logs/',
-                batch_size=BATCH_SIZE,
                 write_graph=True,
-                write_grads=True,
                 write_images=True,
                 embeddings_freq=0,
-                embeddings_layer_names=None,
                 embeddings_metadata=None),
     CSVLogger('logs/' + os.sep + 'test_model' + datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S') + '.log')]
 
+# Load the best trained model for inference
+model_path = './result/2-conv1d-CNN-new_2025-11-30_15-59-41_33_0.055_0.005.h5'
+loaded_model = load_model(model_path, custom_objects={'mse': 'mse'})
+
 time_dnn_a = time.time()
-train_history = Neural_model.fit(train_x, train_y,
-                                epochs=100,
-                                batch_size=BATCH_SIZE,
-                                shuffle=False,
-                                validation_data=(valid_x, valid_y),
-                                callbacks=callbacks_list_new,
-                                verbose=1)
-
+probs = loaded_model.predict(test_x, batch_size = BATCH_SIZE, verbose = 1)
+evaluated_results = loaded_model.evaluate(test_x, test_y, batch_size= BATCH_SIZE, verbose= 1)
 time_dnn_b = time.time()
-
-probs = Neural_model.predict(test_x, batch_size = BATCH_SIZE, verbose = 1)
-evaluated_results = Neural_model.evaluate(test_x, test_y, batch_size= BATCH_SIZE, verbose= 1)
 
 print("Normalized results:")
 print("-------------------------------------------------")

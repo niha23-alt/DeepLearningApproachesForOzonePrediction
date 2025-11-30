@@ -21,7 +21,7 @@ export function DayForecastPanel() {
   ]
 
   const getRiskColor = (level: string) => {
-    const colors = {
+    const colors: Record<string, string> = {
       'low': 'bg-green-500',
       'moderate': 'bg-yellow-400',
       'high': 'bg-orange-500',
@@ -31,7 +31,7 @@ export function DayForecastPanel() {
   }
 
   const getRiskTextColor = (level: string) => {
-    const colors = {
+    const colors: Record<string, string> = {
       'low': 'text-green-600',
       'moderate': 'text-yellow-600',
       'high': 'text-orange-600',
