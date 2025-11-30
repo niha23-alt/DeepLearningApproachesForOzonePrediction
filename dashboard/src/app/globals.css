@@ -1,0 +1,78 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom CSS Variables for Ozone Dashboard */
+:root {
+  --color-sky-blue: #3C9EE7;
+  --color-green: #4CAF50;
+  --color-yellow: #FFEB3B;
+  --color-red: #F44336;
+  --color-orange: #FF9800;
+  --color-soft-grey: #F5F5F5;
+  --color-light-grey: #E0E0E0;
+  --color-dark-grey: #333333;
+  --color-medium-grey: #666666;
+  --color-purple: #9C27B0;
+  --color-dark-orange: #FF5722;
+}
+
+/* AQI Color Coding */
+.aqi-good { background-color: #4CAF50; }
+.aqi-moderate { background-color: #FFEB3B; }
+.aqi-unhealthy-sensitive { background-color: #FF9800; }
+.aqi-unhealthy { background-color: #FF5722; }
+.aqi-very-unhealthy { background-color: #F44336; }
+.aqi-hazardous { background-color: #9C27B0; }
+
+/* Custom Card Styles */
+.ozone-card {
+  @apply bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition-all duration-200 hover:-translate-y-0.5;
+}
+
+/* Chart Container Styles */
+.chart-container {
+  @apply w-full bg-white rounded-xl border border-gray-200 p-4;
+}
+
+/* Responsive Grid Layout */
+.dashboard-grid {
+  @apply grid gap-5 grid-cols-1 lg:grid-cols-2;
+}
+
+@media (min-width: 1200px) {
+  .dashboard-grid {
+    @apply lg:grid-cols-3;
+  }
+}
+
+/* Custom Animations */
+@keyframes slideInUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-slide-in {
+  animation: slideInUp 0.5s ease-out forwards;
+}
+
+/* Focus Styles for Accessibility */
+.focus-visible:focus {
+  @apply outline-2 outline-sky-blue outline-offset-2;
+}
+
+/* Loading Spinner */
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.loading-spinner {
+  animation: spin 1s linear infinite;
+}
