@@ -6,3 +6,6 @@ tensorflow==2.20.0
 plot_keras_history
 fastapi==0.115.5
 uvicorn==0.32.0
+streamlit==1.38.0
+requests==2.32.3
+altair==5.4.1
